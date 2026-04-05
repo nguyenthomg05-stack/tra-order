@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đặt Trà & Nước Uống</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f5f5f0; min-height: 100vh; }
+
+    .header {
+      background: linear-gradient(135deg, #1a7a5e 0%, #0f5a42 100%);
+      color: white;
+      text-align: center;
+      padding: 28px 20px 20px;
+    }
+    .header .emoji { font-size: 40px; display: block; margin-bottom: 8px; }
+    .header h1 { font-size: 22px; font-weight: 600; }
+    .header p { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+    .price-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+
+    .section { padding: 16px; }
+    .section-title { font-size: 13px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+
+    .menu-list { display: flex; flex-direction: column; gap: 10px; }
+    .menu-item {
+      background: white;
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .item-icon { font-size: 34px; flex-shrink: 0; }
+    .item-info { flex: 1; }
+    .item-name { font-size: 15px; font-weight: 600; color: #1a1a1a; }
+    .item-desc { font-size: 12px; color: #999; margin-top: 2px; }
+    .item-price { font-size: 14px; font-weight: 700; color: #1a7a5e; margin-top: 3px; }
+    .qty-ctrl { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .qty-btn {
+      width: 30px; height: 30px; border-radius: 50%;
+      border: 2px solid #1a7a5e; background: white;
+      color: #1a7a5e; font-size: 18px; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .qty-btn:active { transform: scale(0.92); }
+    .qty-btn.plus { background: #1a7a5e; color: white; }
+    .qty-num { font-size: 16px; font-weight: 700; min-width: 18px; text-align: center; color: #1a1a1a; }
+
+    .note-section { padding: 0 16px 16px; }
+    .note-section textarea {
+      width: 100%; border: 1.5px solid #e5e5e5; border-radius: 12px;
+      padding: 12px; font-size: 14px; font-family: inherit;
+      resize: none; outline: none; color: #333;
+      transition: border-color 0.2s;
+    }
+    .note-section textarea:focus { border-color: #1a7a5e; }
+
+    .cart-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: white;
+      padding: 12px 16px 20px;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+      display: none;
+    }
+    .cart-summary {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 10px;
+    }
+    .cart-summary span { font-size: 13px; color: #666; }
+    .cart-summary strong { font-size: 18px; color: #1a7a5e; }
+    .order-btn {
+      width: 100%; padding: 15px;
+      background: linear-gradient(135deg, #1a7a5e, #0f5a42);
+      color: white; border: none; border-radius: 14px;
+      font-size: 16px; font-weight: 700; cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: opacity 0.2s;
+    }
+    .order-btn:active { opacity: 0.85; }
+
+    .bottom-spacer { height: 120px; }
+
+    /* Success screen */
+    .success-screen {
+      display: none;
+      position: fixed; inset: 0;
+      background: #f5f5f0;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      text-align: center;
+      z-index: 200;
+    }
+    .success-screen .check { font-size: 64px; margin-bottom: 20px; }
+    .success-screen h2 { font-size: 24px; font-weight: 700; color: #1a1a1a; margin-bottom: 10px; }
+    .success-screen p { font-size: 15px; color: #666; line-height: 1.6; }
+    .order-id-box {
+      background: white; border-radius: 12px; padding: 14px 24px;
+      margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .order-id-box small { font-size: 11px; color: #aaa; display: block; margin-bottom: 4px; }
+    .order-id-box span { font-size: 20px; font-weight: 800; color: #1a7a5e; letter-spacing: 2px; }
+    .new-order-btn {
+      margin-top: 16px; padding: 13px 32px;
+      background: #1a7a5e; color: white; border: none;
+      border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer;
+    }
+
+    /* Loading */
+    .loading-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4); z-index: 300;
+      align-items: center; justify-content: center;
+    }
+    .spinner {
+      background: white; border-radius: 16px; padding: 28px 36px;
+      text-align: center;
+    }
+    .spinner .dots { font-size: 28px; margin-bottom: 10px; animation: bounce 1s infinite; }
+    .spinner p { font-size: 14px; color: #555; }
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <span class="emoji">🧋</span>
+  <h1>Trà & Nước Uống</h1>
+  <p>Chọn món — Đặt đơn — Nhận tại quầy</p>
+  <span class="price-badge">✨ Đồng giá 25.000đ / ly</span>
+</div>
+
+<div class="section">
+  <div class="section-title">Thực đơn</div>
+  <div class="menu-list" id="menuList"></div>
+</div>
+
+<div class="note-section">
+  <textarea id="noteInput" rows="2" placeholder="Ghi chú thêm: ít đường, nhiều đá, dị ứng... (không bắt buộc)"></textarea>
+</div>
+
+<div class="bottom-spacer"></div>
+
+<div class="cart-bar" id="cartBar">
+  <div class="cart-summary">
+    <span id="cartQtyLabel">0 ly</span>
+    <strong id="cartTotal">0đ</strong>
+  </div>
+  <button class="order-btn" onclick="submitOrder()">🛍️ Đặt hàng ngay</button>
+</div>
+
+<!-- Success screen -->
+<div class="success-screen" id="successScreen">
+  <div class="check">✅</div>
+  <h2>Đặt hàng thành công!</h2>
+  <p>Quán đã nhận được đơn của bạn.<br>Vui lòng đợi trong giây lát.</p>
+  <div class="order-id-box">
+    <small>Mã đơn hàng</small>
+    <span id="orderIdDisplay">#0000</span>
+  </div>
+  <p id="successItems" style="font-size:14px; color:#555;"></p>
+  <button class="new-order-btn" onclick="resetOrder()">Đặt thêm</button>
+</div>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner">
+    <div class="dots">🧋</div>
+    <p>Đang gửi đơn hàng...</p>
+  </div>
+</div>
+
+<script>
+const PRICE = 25000;
+const menu = [
+  { id: 'tra-sua',      name: 'Trà Sữa',      icon: '🧋', desc: 'Trà sữa truyền thống béo ngậy' },
+  { id: 'tra-trai-cay', name: 'Trà Trái Cây',  icon: '🍹', desc: 'Tươi mát, nhiều loại trái cây' },
+  { id: 'tra-dao',      name: 'Trà Đào',       icon: '🍑', desc: 'Đào thơm, thanh mát dịu nhẹ' },
+];
+const qty = { 'tra-sua': 0, 'tra-trai-cay': 0, 'tra-dao': 0 };
+
+function fmt(n) { return n.toLocaleString('vi-VN') + 'đ'; }
+
+function renderMenu() {
+  const list = document.getElementById('menuList');
+  list.innerHTML = menu.map(item => `
+    <div class="menu-item">
+      <span class="item-icon">${item.icon}</span>
+      <div class="item-info">
+        <div class="item-name">${item.name}</div>
+        <div class="item-desc">${item.desc}</div>
+        <div class="item-price">25.000đ</div>
+      </div>
+      <div class="qty-ctrl">
+        <button class="qty-btn" onclick="changeQty('${item.id}', -1)">−</button>
+        <span class="qty-num" id="qty-${item.id}">${qty[item.id]}</span>
+        <button class="qty-btn plus" onclick="changeQty('${item.id}', 1)">+</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function changeQty(id, delta) {
+  qty[id] = Math.max(0, qty[id] + delta);
+  document.getElementById('qty-' + id).textContent = qty[id];
+  updateCart();
+}
+
+function updateCart() {
+  const total = Object.values(qty).reduce((s, q) => s + q * PRICE, 0);
+  const totalQty = Object.values(qty).reduce((s, q) => s + q, 0);
+  const bar = document.getElementById('cartBar');
+  bar.style.display = totalQty > 0 ? 'block' : 'none';
+  document.getElementById('cartQtyLabel').textContent = totalQty + ' ly';
+  document.getElementById('cartTotal').textContent = fmt(total);
+}
+
+async function submitOrder() {
+  const items = menu.filter(m => qty[m.id] > 0).map(m => ({ ...m, qty: qty[m.id] }));
+  if (!items.length) return;
+  const note = document.getElementById('noteInput').value.trim();
+  const total = items.reduce((s, m) => s + m.qty * PRICE, 0);
+  const orderId = '#' + String(Math.floor(Math.random() * 9000) + 1000);
+
+  document.getElementById('loadingOverlay').style.display = 'flex';
+
+  try {
+    const res = await fetch('/api/order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId, items, note, total })
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+
+    document.getElementById('loadingOverlay').style.display = 'none';
+    document.getElementById('orderIdDisplay').textContent = orderId;
+    document.getElementById('successItems').textContent =
+      items.map(m => `${m.icon} ${m.name} ×${m.qty}`).join('   ');
+    document.getElementById('successScreen').style.display = 'flex';
+  } catch (e) {
+    document.getElementById('loadingOverlay').style.display = 'none';
+    alert('❌ Gửi đơn thất bại: ' + e.message + '\n\nVui lòng thử lại.');
+  }
+}
+
+function resetOrder() {
+  menu.forEach(m => qty[m.id] = 0);
+  document.getElementById('noteInput').value = '';
+  document.getElementById('successScreen').style.display = 'none';
+  renderMenu();
+  updateCart();
+}
+
+renderMenu();
+</script>
+</body>
+</html>

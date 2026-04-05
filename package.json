@@ -1,0 +1,6 @@
+{
+  "name": "tra-order",
+  "version": "1.0.0",
+  "description": "Hệ thống đặt trà online với thông báo Telegram",
+  "engines": { "node": "18.x" }
+}
